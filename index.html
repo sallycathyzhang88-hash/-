@@ -190,14 +190,12 @@
             transform: scale(1.2);
         }
 
-        /* 优先级色彩 */
         .priority-P0 { background: var(--p0); }
         .priority-P1 { background: var(--p1); }
         .priority-P2 { background: var(--p2); }
         .priority-P3 { background: var(--p3); }
         .priority-P4 { background: var(--p4); }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -304,7 +302,6 @@
             background: #CBD5E1;
         }
 
-        /* 空状态 */
         .empty-hint {
             color: #94A3B8;
             font-size: 12px;
@@ -411,7 +408,7 @@
     (function() {
         // ----- 数据层 -----
         let projects = JSON.parse(localStorage.getItem('influencer_projects')) || ["Momcozy", "Bluetti"];
-
+        
         let tasks = JSON.parse(localStorage.getItem('influencer_tasks_v3')) || [
             { id: 1, project: "Momcozy", title: "Alex_TikTok", ddlType: "脚本提交", priority: "P1", link: "https://www.google.com", date: new Date().toISOString().split('T')[0] },
             { id: 2, project: "Bluetti", title: "TechUnbox", ddlType: "发布", priority: "P0", link: "https://www.youtube.com", date: new Date().toISOString().split('T')[0] }
@@ -439,15 +436,23 @@
             localStorage.setItem('influencer_tasks_v3', JSON.stringify(tasks));
         }
 
-        // 填充项目下拉
+        // 填充项目下拉 - 关键修复：清空并重新添加所有选项
         function populateProjects() {
+            if (!projectSelect) return;
+            // 清空所有现有选项
             projectSelect.innerHTML = '';
+            // 添加默认占位选项（可选）
+            // 遍历项目数组添加选项
             projects.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p;
                 opt.textContent = p;
                 projectSelect.appendChild(opt);
             });
+            // 如果项目列表不为空，默认选中第一个
+            if (projects.length > 0) {
+                projectSelect.value = projects[0];
+            }
         }
 
         // ----- 渲染日历 -----
@@ -477,18 +482,15 @@
                         hasCell = true;
                         const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dateCounter).padStart(2,'0')}`;
 
-                        // 日期数字
                         const daySpan = document.createElement('span');
                         daySpan.className = 'day-number';
                         daySpan.textContent = dateCounter;
                         td.appendChild(daySpan);
 
-                        // 标记今天
                         if (year === today.getFullYear() && month === today.getMonth() && dateCounter === today.getDate()) {
                             td.classList.add('current-day');
                         }
 
-                        // 事件列表
                         const ul = document.createElement('ul');
                         ul.className = 'event-list';
 
@@ -552,7 +554,8 @@
                 if (!projects.includes(trimmed)) {
                     projects.push(trimmed);
                     saveProjects();
-                    populateProjects();
+                    populateProjects(); // 刷新下拉列表
+                    // 自动选中新添加的项目
                     projectSelect.value = trimmed;
                 } else {
                     alert('⚠️ 该项目已存在');
@@ -561,6 +564,7 @@
         }
 
         function openModal() {
+            // 先刷新项目列表
             populateProjects();
             // 默认日期今天
             taskDate.value = new Date().toISOString().split('T')[0];
@@ -636,6 +640,7 @@
 
         // 初始化
         renderCalendar();
+        // 确保项目下拉在页面加载时填充
         populateProjects();
 
         // 点击 modal 背景关闭
