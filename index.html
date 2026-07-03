@@ -3,25 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>红人排期与跟进日历</title>
+    <title>红人排期 · 跟进日历</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         :root {
-            --primary-color: #4A90E2;
-            --bg-color: #F8FAFC;
-            --text-color: #1E293B;
-            --p0-color: #EF4444; /* P0 极其紧急 - 红色 */
-            --p1-color: #F97316; /* P1 重要高优 - 橙色 */
-            --p2-color: #F59E0B; /* P2 中优先级 - 黄色 */
-            --p3-color: #10B981; /* P3 低优先级 - 绿色 */
-            --p4-color: #64748B; /* P4 正常常规 - 灰色 */
+            --primary: #4A90E2;
+            --bg: #F8FAFC;
+            --text: #1E293B;
+            --border: #E2E8F0;
+            --p0: #EF4444;
+            --p1: #F97316;
+            --p2: #F59E0B;
+            --p3: #10B981;
+            --p4: #64748B;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             padding: 20px;
+            margin: 0;
         }
 
         .container {
@@ -33,6 +37,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
             margin-bottom: 20px;
         }
 
@@ -43,247 +49,329 @@
         }
 
         .btn {
-            background-color: var(--primary-color);
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            cursor: pointer;
+            padding: 10px 18px;
+            border-radius: 8px;
             font-weight: 600;
             font-size: 14px;
+            cursor: pointer;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .btn:hover { background-color: #2563EB; }
+        .btn:hover {
+            background: #2563EB;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        .btn-outline {
+            background: #F1F5F9;
+            color: #475569;
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover {
+            background: #E2E8F0;
+            box-shadow: none;
+        }
 
         .calendar-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            flex-wrap: wrap;
             background: white;
             padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            margin-bottom: 24px;
         }
 
-        /* 日历大表格 */
         .calendar-table {
             width: 100%;
             border-collapse: collapse;
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            table-layout: fixed;
+            box-shadow: 0 6px 12px -6px rgba(0,0,0,0.04);
         }
 
         .calendar-table th {
-            background-color: #F1F5F9;
+            background: #F8FAFC;
             color: #475569;
-            padding: 14px;
+            padding: 14px 6px;
             font-weight: 600;
             font-size: 14px;
-            border: 1px solid #E2E8F0;
+            border: 1px solid var(--border);
         }
 
         .calendar-table td {
             height: 140px;
-            border: 1px solid #E2E8F0;
-            padding: 8px;
+            border: 1px solid var(--border);
+            padding: 6px 6px 4px 6px;
             vertical-align: top;
-            position: relative;
+            transition: background 0.1s;
         }
 
         .day-number {
-            font-weight: 700;
+            font-weight: 600;
             font-size: 13px;
-            margin-bottom: 6px;
             color: #64748B;
             display: inline-block;
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             text-align: center;
-            line-height: 24px;
+            line-height: 26px;
+            border-radius: 50%;
+            margin-bottom: 4px;
         }
 
         .current-day .day-number {
-            background-color: var(--primary-color);
+            background: var(--primary);
             color: white;
-            border-radius: 50%;
         }
 
-        /* 日历内事件条样式 */
         .event-list {
             list-style: none;
             padding: 0;
-            margin: 0;
-            overflow-y: auto;
+            margin: 4px 0 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
             max-height: 105px;
+            overflow-y: auto;
         }
 
         .event-item {
             font-size: 11px;
-            padding: 5px 6px;
-            margin-bottom: 5px;
-            border-radius: 4px;
+            padding: 5px 8px 5px 6px;
+            border-radius: 6px;
             color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
             line-height: 1.3;
+            transition: all 0.1s;
+            cursor: default;
         }
 
         .event-content {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            width: 88%;
+            flex: 1;
+            min-width: 0;
         }
 
         .event-content a {
             color: white;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 500;
         }
-        .event-content a:hover { text-decoration: underline; }
+        .event-content a:hover {
+            text-decoration: underline;
+        }
 
         .delete-btn {
             background: none;
             border: none;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.7);
             cursor: pointer;
-            font-size: 14px;
-            padding: 0;
-            margin-left: 2px;
+            font-size: 15px;
+            padding: 0 2px;
+            line-height: 1;
+            transition: 0.15s;
         }
-        .delete-btn:hover { color: white; }
+        .delete-btn:hover {
+            color: white;
+            transform: scale(1.2);
+        }
 
-        /* 紧急程度色彩区分 */
-        .priority-P0 { background-color: var(--p0-color); }
-        .priority-P1 { background-color: var(--p1-color); }
-        .priority-P2 { background-color: var(--p2-color); }
-        .priority-P3 { background-color: var(--p3-color); }
-        .priority-P4 { background-color: var(--p4-color); }
+        /* 优先级色彩 */
+        .priority-P0 { background: var(--p0); }
+        .priority-P1 { background: var(--p1); }
+        .priority-P2 { background: var(--p2); }
+        .priority-P3 { background: var(--p3); }
+        .priority-P4 { background: var(--p4); }
 
-        /* 弹窗设计 */
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(2px);
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(3px);
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 2000;
         }
+
         .modal-content {
             background: white;
-            padding: 24px;
-            border-radius: 12px;
-            width: 440px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 28px 30px;
+            border-radius: 20px;
+            width: 480px;
+            max-width: 94%;
+            box-shadow: 0 30px 40px -20px rgba(0,0,0,0.3);
+            animation: modalFade 0.2s ease;
         }
+
+        @keyframes modalFade {
+            0% { opacity: 0; transform: translateY(12px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
         .modal-content h3 {
-            margin-top: 0; margin-bottom: 18px;
-            color: #0F172A; font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 22px;
+            font-size: 20px;
+            color: #0F172A;
         }
+
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 18px;
         }
+
         .form-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             font-size: 13px;
             font-weight: 600;
             color: #334155;
         }
-        .form-group input, .form-group select {
+
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 9px;
+            padding: 10px 12px;
             border: 1px solid #CBD5E1;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 13px;
-            color: #1E293B;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            transition: 0.15s;
         }
-        .form-group input:focus, .form-group select:focus {
-            outline: none; border-color: var(--primary-color);
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 1px;
+            border-color: transparent;
         }
+
         .project-input-group {
             display: flex;
             gap: 8px;
         }
-        .add-project-btn {
-            background-color: #F1F5F9;
-            border: 1px solid #CBD5E1;
-            padding: 0 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            color: #475569;
+
+        .project-input-group select {
+            flex: 1;
         }
-        .add-project-btn:hover { background-color: #E2E8F0; }
+
+        .add-project-btn {
+            background: #F1F5F9;
+            border: 1px solid #CBD5E1;
+            border-radius: 10px;
+            padding: 0 16px;
+            font-size: 20px;
+            font-weight: 400;
+            cursor: pointer;
+            color: #334155;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+        }
+
+        .add-project-btn:hover {
+            background: #E2E8F0;
+            border-color: #94A3B8;
+        }
+
         .modal-actions {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
-            margin-top: 22px;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            background: #E2E8F0;
+            color: #334155;
+        }
+        .btn-secondary:hover {
+            background: #CBD5E1;
+        }
+
+        /* 空状态 */
+        .empty-hint {
+            color: #94A3B8;
+            font-size: 12px;
+            padding: 2px 4px;
+        }
+
+        @media (max-width: 700px) {
+            .calendar-table td {
+                height: 110px;
+                padding: 4px;
+            }
+            .event-item {
+                font-size: 10px;
+                padding: 3px 4px;
+            }
+            .day-number {
+                width: 22px;
+                height: 22px;
+                line-height: 22px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
-
 <div class="container">
     <header>
-        <h1>🗓️ 红人排期与跟进日历</h1>
-        <button class="btn" onclick="openModal()">+ 新建排期 / 待办事项</button>
+        <h1>📅 红人排期 · 跟进日历</h1>
+        <button class="btn" onclick="openModal()">＋ 新建排期</button>
     </header>
 
     <div class="calendar-controls">
-        <button class="btn" style="background-color: #64748B;" onclick="prevMonth()"><</button>
-        <h2 id="month-year-display" style="margin: 0; min-width: 120px; text-align: center; font-size: 18px;"></h2>
-        <button class="btn" style="background-color: #64748B;" onclick="nextMonth()">></button>
-        <button class="btn" style="background-color: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;" onclick="goToCurrentMonth()">今天</button>
+        <button class="btn btn-outline" onclick="prevMonth()">‹</button>
+        <h2 id="month-year-display" style="margin:0; min-width:140px; text-align:center; font-size:18px;"></h2>
+        <button class="btn btn-outline" onclick="nextMonth()">›</button>
+        <button class="btn btn-outline" onclick="goToCurrentMonth()">今天</button>
     </div>
 
     <table class="calendar-table">
-        <thead>
-            <tr>
-                <th>周日</th><th>周一</th><th>周二</th><th>周三</th><th>周四</th><th>周五</th><th>周六</th>
-            </tr>
-        </thead>
+        <thead><tr><th>周日</th><th>周一</th><th>周二</th><th>周三</th><th>周四</th><th>周五</th><th>周六</th></tr></thead>
         <tbody id="calendar-body"></tbody>
     </table>
 </div>
 
-<!-- 弹窗部分 -->
+<!-- 弹窗 -->
 <div class="modal" id="task-modal">
     <div class="modal-content">
-        <h3>新建排期 / 待办事项</h3>
-        
-        <!-- 1. 项目选择与右侧添加项目 -->
+        <h3>✏️ 新建排期 / 待办</h3>
+
         <div class="form-group">
             <label>1. 项目选择</label>
             <div class="project-input-group">
-                <select id="task-project">
-                    <!-- 动态加载 -->
-                </select>
-                <button type="button" class="add-project-btn" onclick="addNewProjectPrompt()" title="添加新项目">+</button>
+                <select id="task-project"></select>
+                <button type="button" class="add-project-btn" onclick="addNewProjectPrompt()" title="添加项目">＋</button>
             </div>
         </div>
 
-        <!-- 2. 红人链接与账号 -->
         <div class="form-group">
             <label for="task-title">2. 红人名称 / 账号</label>
-            <input type="text" id="task-title" placeholder="例如：Alex_Reviewer" required>
+            <input type="text" id="task-title" placeholder="例: Alex_Reviewer" required>
         </div>
+
         <div class="form-group">
-            <label for="task-link">红人主页 / 跟进链接 (选填)</label>
+            <label for="task-link">红人链接 / 跟进链接 (选填)</label>
             <input type="url" id="task-link" placeholder="https://instagram.com/... 或表格链接">
         </div>
 
-        <!-- 3. DDL 类型 -->
         <div class="form-group">
             <label for="task-ddl-type">3. DDL 类型</label>
             <select id="task-ddl-type">
@@ -296,204 +384,265 @@
             </select>
         </div>
 
-        <!-- 4. 紧急程度 -->
         <div class="form-group">
             <label for="task-priority">4. 紧急程度</label>
             <select id="task-priority">
-                <option value="P0">🔴 P0 - 极其紧急/死线</option>
-                <option value="P1">🟠 P1 - 重要高优先级</option>
+                <option value="P0">🔴 P0 - 极其紧急</option>
+                <option value="P1">🟠 P1 - 重要高优</option>
                 <option value="P2">🟡 P2 - 中优先级</option>
                 <option value="P3">🟢 P3 - 低优先级</option>
                 <option value="P4">🔵 P4 - 正常常规</option>
             </select>
         </div>
 
-        <!-- 5. DDL 日期 -->
         <div class="form-group">
             <label for="task-date">5. DDL 日期</label>
             <input type="date" id="task-date" required>
         </div>
 
         <div class="modal-actions">
-            <button class="btn" style="background-color: #94A3B8;" onclick="closeModal()">取消</button>
+            <button class="btn btn-secondary" onclick="closeModal()">取消</button>
             <button class="btn" onclick="saveTask()">保存</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 初始化默认项目库
-    let projects = JSON.parse(localStorage.getItem('influencer_projects')) || ["Momcozy", "Bluetti"];
-    
-    // 初始化排期数据
-    let tasks = JSON.parse(localStorage.getItem('influencer_tasks_v3')) || [
-        { id: 1, project: "Momcozy", title: "Alex_TikTok", ddlType: "脚本提交", priority: "P1", link: "https://www.google.com", date: new Date().toISOString().split('T')[0] },
-        { id: 2, project: "Bluetti", title: "TechUnbox", ddlType: "发布", priority: "P0", link: "https://www.youtube.com", date: new Date().toISOString().split('T')[0] }
-    ];
+    (function() {
+        // ----- 数据层 -----
+        let projects = JSON.parse(localStorage.getItem('influencer_projects')) || ["Momcozy", "Bluetti"];
 
-    let currentDate = new Date();
+        let tasks = JSON.parse(localStorage.getItem('influencer_tasks_v3')) || [
+            { id: 1, project: "Momcozy", title: "Alex_TikTok", ddlType: "脚本提交", priority: "P1", link: "https://www.google.com", date: new Date().toISOString().split('T')[0] },
+            { id: 2, project: "Bluetti", title: "TechUnbox", ddlType: "发布", priority: "P0", link: "https://www.youtube.com", date: new Date().toISOString().split('T')[0] }
+        ];
 
-    function renderCalendar() {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        document.getElementById('month-year-display').innerText = `${year}年 ${month + 1}月`;
+        let currentDate = new Date();
 
-        const firstDayIndex = new Date(year, month, 1).getDay();
-        const totalDays = new Date(year, month + 1, 0).getDate();
+        // ----- DOM 缓存 -----
         const calendarBody = document.getElementById('calendar-body');
-        calendarBody.innerHTML = '';
+        const monthDisplay = document.getElementById('month-year-display');
+        const modal = document.getElementById('task-modal');
+        const projectSelect = document.getElementById('task-project');
+        const taskTitle = document.getElementById('task-title');
+        const taskLink = document.getElementById('task-link');
+        const taskDdlType = document.getElementById('task-ddl-type');
+        const taskPriority = document.getElementById('task-priority');
+        const taskDate = document.getElementById('task-date');
 
-        let dateCounter = 1;
-        const today = new Date();
-
-        for (let i = 0; i < 6; i++) {
-            let row = document.createElement('tr');
-            let hasCells = false;
-
-            for (let j = 0; j < 7; j++) {
-                let cell = document.createElement('td');
-
-                if (i === 0 && j < firstDayIndex) {
-                    cell.innerHTML = '';
-                } else if (dateCounter > totalDays) {
-                    cell.innerHTML = '';
-                } else {
-                    hasCells = true;
-                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(dateCounter).padStart(2, '0')}`;
-                    
-                    if (year === today.getFullYear() && month === today.getMonth() && dateCounter === today.getDate()) {
-                        cell.classList.add('current-day');
-                    }
-
-                    let dayNumSpan = document.createElement('span');
-                    dayNumSpan.className = 'day-number';
-                    dayNumSpan.innerText = dateCounter;
-                    cell.appendChild(dayNumSpan);
-
-                    let eventList = document.createElement('ul');
-                    eventList.className = 'event-list';
-
-                    const dayTasks = tasks.filter(t => t.date === dateString);
-                    dayTasks.forEach(task => {
-                        let li = document.createElement('li');
-                        li.className = `event-item priority-${task.priority}`;
-                        
-                        let displayText = `[${task.project}] ${task.title}-${task.ddlType}`;
-                        
-                        let contentDiv = document.createElement('div');
-                        contentDiv.className = 'event-content';
-                        
-                        if (task.link) {
-                            contentDiv.innerHTML = `<a href="${task.link}" target="_blank" title="点击跳转跟进链接\n项目: ${task.project}\n紧急程度: ${task.priority}">${displayText}</a>`;
-                        } else {
-                            contentDiv.innerHTML = `<span title="项目: ${task.project}\n紧急程度: ${task.priority}">${displayText}</span>`;
-                        }
-                        
-                        li.appendChild(contentDiv);
-
-                        let delBtn = document.createElement('button');
-                        delBtn.className = 'delete-btn';
-                        delBtn.innerHTML = '&times;';
-                        delBtn.onclick = (e) => {
-                            e.stopPropagation();
-                            deleteTask(task.id);
-                        };
-                        li.appendChild(delBtn);
-                        eventList.appendChild(li);
-                    });
-
-                    cell.appendChild(eventList);
-                    dateCounter++;
-                }
-                row.appendChild(cell);
-            }
-            if (hasCells) calendarBody.appendChild(row);
-        }
-    }
-
-    function populateProjects() {
-        const select = document.getElementById('task-project');
-        select.innerHTML = '';
-        projects.forEach(p => {
-            let opt = document.createElement('option');
-            opt.value = p;
-            opt.innerText = p;
-            select.appendChild(opt);
-        });
-    }
-
-    function addNewProjectPrompt() {
-        const newProj = prompt("请输入新项目名称 (如: Clipto):");
-        if (newProj && newProj.trim() !== "") {
-            const trimmed = newProj.trim();
-            if (!projects.includes(trimmed)) {
-                projects.push(trimmed);
-                localStorage.setItem('influencer_projects', JSON.stringify(projects));
-                populateProjects();
-                document.getElementById('task-project').value = trimmed;
-            } else {
-                alert("该项目已存在！");
-            }
-        }
-    }
-
-    function openModal() {
-        populateProjects();
-        document.getElementById('task-modal').style.display = 'flex';
-        document.getElementById('task-date').value = new Date().toISOString().split('T')[0];
-    }
-
-    function closeModal() {
-        document.getElementById('task-modal').style.display = 'none';
-        document.getElementById('task-title').value = '';
-        document.getElementById('task-link').value = '';
-    }
-
-    function saveTask() {
-        const project = document.getElementById('task-project').value;
-        const title = document.getElementById('task-title').value;
-        const link = document.getElementById('task-link').value;
-        const ddlType = document.getElementById('task-ddl-type').value;
-        const priority = document.getElementById('task-priority').value;
-        const date = document.getElementById('task-date').value;
-
-        if (!title || !date || !project) {
-            alert("请确认项目、红人名称和日期均已填写！");
-            return;
+        // ----- 辅助函数 -----
+        function saveProjects() {
+            localStorage.setItem('influencer_projects', JSON.stringify(projects));
         }
 
-        const newTask = {
-            id: Date.now(),
-            project,
-            title,
-            link,
-            ddlType,
-            priority,
-            date
-        };
-
-        tasks.push(newTask);
-        localStorage.setItem('influencer_tasks_v3', JSON.stringify(tasks));
-        closeModal();
-        renderCalendar();
-    }
-
-    function deleteTask(id) {
-        if(confirm("确定要删除这条排期记录吗？")) {
-            tasks = tasks.filter(t => t.id !== id);
+        function saveTasks() {
             localStorage.setItem('influencer_tasks_v3', JSON.stringify(tasks));
+        }
+
+        // 填充项目下拉
+        function populateProjects() {
+            projectSelect.innerHTML = '';
+            projects.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                projectSelect.appendChild(opt);
+            });
+        }
+
+        // ----- 渲染日历 -----
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            monthDisplay.textContent = `${year}年 ${month + 1}月`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            calendarBody.innerHTML = '';
+
+            let dateCounter = 1;
+            for (let row = 0; row < 6; row++) {
+                const tr = document.createElement('tr');
+                let hasCell = false;
+
+                for (let col = 0; col < 7; col++) {
+                    const td = document.createElement('td');
+
+                    if (row === 0 && col < firstDay) {
+                        td.innerHTML = '';
+                    } else if (dateCounter > totalDays) {
+                        td.innerHTML = '';
+                    } else {
+                        hasCell = true;
+                        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dateCounter).padStart(2,'0')}`;
+
+                        // 日期数字
+                        const daySpan = document.createElement('span');
+                        daySpan.className = 'day-number';
+                        daySpan.textContent = dateCounter;
+                        td.appendChild(daySpan);
+
+                        // 标记今天
+                        if (year === today.getFullYear() && month === today.getMonth() && dateCounter === today.getDate()) {
+                            td.classList.add('current-day');
+                        }
+
+                        // 事件列表
+                        const ul = document.createElement('ul');
+                        ul.className = 'event-list';
+
+                        const dayTasks = tasks.filter(t => t.date === dateStr);
+                        if (dayTasks.length === 0) {
+                            const emptyHint = document.createElement('div');
+                            emptyHint.className = 'empty-hint';
+                            emptyHint.textContent = '—';
+                            ul.appendChild(emptyHint);
+                        } else {
+                            dayTasks.forEach(task => {
+                                const li = document.createElement('li');
+                                li.className = `event-item priority-${task.priority}`;
+
+                                const content = document.createElement('div');
+                                content.className = 'event-content';
+                                const displayText = `[${task.project}] ${task.title} · ${task.ddlType}`;
+
+                                if (task.link) {
+                                    const a = document.createElement('a');
+                                    a.href = task.link;
+                                    a.target = '_blank';
+                                    a.textContent = displayText;
+                                    a.title = `项目: ${task.project} | 紧急: ${task.priority}`;
+                                    content.appendChild(a);
+                                } else {
+                                    const span = document.createElement('span');
+                                    span.textContent = displayText;
+                                    span.title = `项目: ${task.project} | 紧急: ${task.priority}`;
+                                    content.appendChild(span);
+                                }
+
+                                const delBtn = document.createElement('button');
+                                delBtn.className = 'delete-btn';
+                                delBtn.innerHTML = '✕';
+                                delBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    deleteTask(task.id);
+                                };
+
+                                li.appendChild(content);
+                                li.appendChild(delBtn);
+                                ul.appendChild(li);
+                            });
+                        }
+
+                        td.appendChild(ul);
+                        dateCounter++;
+                    }
+                    tr.appendChild(td);
+                }
+                if (hasCell) calendarBody.appendChild(tr);
+            }
+        }
+
+        // ----- 增删改 -----
+        function addNewProjectPrompt() {
+            const name = prompt('请输入新项目名称 (例如: Clipto)');
+            if (name && name.trim() !== '') {
+                const trimmed = name.trim();
+                if (!projects.includes(trimmed)) {
+                    projects.push(trimmed);
+                    saveProjects();
+                    populateProjects();
+                    projectSelect.value = trimmed;
+                } else {
+                    alert('⚠️ 该项目已存在');
+                }
+            }
+        }
+
+        function openModal() {
+            populateProjects();
+            // 默认日期今天
+            taskDate.value = new Date().toISOString().split('T')[0];
+            taskTitle.value = '';
+            taskLink.value = '';
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        function saveTask() {
+            const project = projectSelect.value;
+            const title = taskTitle.value.trim();
+            const link = taskLink.value.trim();
+            const ddlType = taskDdlType.value;
+            const priority = taskPriority.value;
+            const date = taskDate.value;
+
+            if (!project || !title || !date) {
+                alert('请完整填写：项目、红人名称、日期');
+                return;
+            }
+
+            const newTask = {
+                id: Date.now(),
+                project,
+                title,
+                link: link || '',
+                ddlType,
+                priority,
+                date
+            };
+
+            tasks.push(newTask);
+            saveTasks();
+            closeModal();
             renderCalendar();
         }
-    }
 
-    function prevMonth() { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); }
-    function nextMonth() { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); }
-    function goToCurrentMonth() { currentDate = new Date(); renderCalendar(); }
+        function deleteTask(id) {
+            if (confirm('确定要删除这条排期吗？')) {
+                tasks = tasks.filter(t => t.id !== id);
+                saveTasks();
+                renderCalendar();
+            }
+        }
 
-    window.onload = function() {
+        // ----- 导航 -----
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+        function goToCurrentMonth() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        // ----- 暴露全局（用于 onclick） -----
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+        window.saveTask = saveTask;
+        window.addNewProjectPrompt = addNewProjectPrompt;
+        window.deleteTask = deleteTask;
+        window.prevMonth = prevMonth;
+        window.nextMonth = nextMonth;
+        window.goToCurrentMonth = goToCurrentMonth;
+
+        // 初始化
         renderCalendar();
-    };
-</script>
+        populateProjects();
 
+        // 点击 modal 背景关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    })();
+</script>
 </body>
 </html>
