@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>红人排期与跟进日历 v2</title>
+    <title>红人排期与跟进日历</title>
     <style>
         :root {
             --primary-color: #4A90E2;
             --bg-color: #F8FAFC;
             --text-color: #1E293B;
-            --p0-color: #EF4444; /* 红色 */
-            --p1-color: #F97316; /* 橙色 */
-            --p2-color: #F59E0B; /* 黄色 */
-            --p3-color: #10B981; /* 绿色 */
-            --p4-color: #64748B; /* 灰色 */
+            --p0-color: #EF4444; /* P0 极其紧急 - 红色 */
+            --p1-color: #F97316; /* P1 重要高优 - 橙色 */
+            --p2-color: #F59E0B; /* P2 中优先级 - 黄色 */
+            --p3-color: #10B981; /* P3 低优先级 - 绿色 */
+            --p4-color: #64748B; /* P4 正常常规 - 灰色 */
         }
 
         body {
@@ -257,12 +257,12 @@
     </table>
 </div>
 
-<!-- 新版配置弹窗 -->
+<!-- 弹窗部分 -->
 <div class="modal" id="task-modal">
     <div class="modal-content">
         <h3>新建排期 / 待办事项</h3>
         
-        <!-- 1. 项目选择与添加 -->
+        <!-- 1. 项目选择与右侧添加项目 -->
         <div class="form-group">
             <label>1. 项目选择</label>
             <div class="project-input-group">
@@ -273,7 +273,7 @@
             </div>
         </div>
 
-        <!-- 2. 红人名称/链接 -->
+        <!-- 2. 红人链接与账号 -->
         <div class="form-group">
             <label for="task-title">2. 红人名称 / 账号</label>
             <input type="text" id="task-title" placeholder="例如：Alex_Reviewer" required>
@@ -326,7 +326,7 @@
     let projects = JSON.parse(localStorage.getItem('influencer_projects')) || ["Momcozy", "Bluetti"];
     
     // 初始化排期数据
-    let tasks = JSON.parse(localStorage.getItem('influencer_tasks_v2')) || [
+    let tasks = JSON.parse(localStorage.getItem('influencer_tasks_v3')) || [
         { id: 1, project: "Momcozy", title: "Alex_TikTok", ddlType: "脚本提交", priority: "P1", link: "https://www.google.com", date: new Date().toISOString().split('T')[0] },
         { id: 2, project: "Bluetti", title: "TechUnbox", ddlType: "发布", priority: "P0", link: "https://www.youtube.com", date: new Date().toISOString().split('T')[0] }
     ];
@@ -411,7 +411,6 @@
         }
     }
 
-    // 刷新项目下拉菜单
     function populateProjects() {
         const select = document.getElementById('task-project');
         select.innerHTML = '';
@@ -423,9 +422,8 @@
         });
     }
 
-    // 动态添加项目
     function addNewProjectPrompt() {
-        const newProj = prompt("请输入新项目名称 (如: Anker):");
+        const newProj = prompt("请输入新项目名称 (如: Clipto):");
         if (newProj && newProj.trim() !== "") {
             const trimmed = newProj.trim();
             if (!projects.includes(trimmed)) {
@@ -475,7 +473,7 @@
         };
 
         tasks.push(newTask);
-        localStorage.setItem('influencer_tasks_v2', JSON.stringify(tasks));
+        localStorage.setItem('influencer_tasks_v3', JSON.stringify(tasks));
         closeModal();
         renderCalendar();
     }
@@ -483,7 +481,7 @@
     function deleteTask(id) {
         if(confirm("确定要删除这条排期记录吗？")) {
             tasks = tasks.filter(t => t.id !== id);
-            localStorage.setItem('influencer_tasks_v2', JSON.stringify(tasks));
+            localStorage.setItem('influencer_tasks_v3', JSON.stringify(tasks));
             renderCalendar();
         }
     }
