@@ -154,7 +154,6 @@
             align-items: center;
             box-shadow: 0 1px 2px rgba(0,0,0,0.06);
             line-height: 1.3;
-            transition: all 0.1s;
             cursor: default;
         }
 
@@ -405,249 +404,256 @@
 </div>
 
 <script>
-    (function() {
-        // ----- 数据层 -----
-        let projects = JSON.parse(localStorage.getItem('influencer_projects')) || ["Momcozy", "Bluetti"];
-        
-        let tasks = JSON.parse(localStorage.getItem('influencer_tasks_v3')) || [
-            { id: 1, project: "Momcozy", title: "Alex_TikTok", ddlType: "脚本提交", priority: "P1", link: "https://www.google.com", date: new Date().toISOString().split('T')[0] },
-            { id: 2, project: "Bluetti", title: "TechUnbox", ddlType: "发布", priority: "P0", link: "https://www.youtube.com", date: new Date().toISOString().split('T')[0] }
-        ];
+    // ----- 数据层（全局变量，方便调试） -----
+    let projects = JSON.parse(localStorage.getItem('influencer_projects')) || ["Momcozy", "Bluetti"];
+    
+    let tasks = JSON.parse(localStorage.getItem('influencer_tasks_v3')) || [
+        { id: 1, project: "Momcozy", title: "Alex_TikTok", ddlType: "脚本提交", priority: "P1", link: "https://www.google.com", date: new Date().toISOString().split('T')[0] },
+        { id: 2, project: "Bluetti", title: "TechUnbox", ddlType: "发布", priority: "P0", link: "https://www.youtube.com", date: new Date().toISOString().split('T')[0] }
+    ];
 
-        let currentDate = new Date();
+    let currentDate = new Date();
 
-        // ----- DOM 缓存 -----
-        const calendarBody = document.getElementById('calendar-body');
-        const monthDisplay = document.getElementById('month-year-display');
-        const modal = document.getElementById('task-modal');
-        const projectSelect = document.getElementById('task-project');
-        const taskTitle = document.getElementById('task-title');
-        const taskLink = document.getElementById('task-link');
-        const taskDdlType = document.getElementById('task-ddl-type');
-        const taskPriority = document.getElementById('task-priority');
-        const taskDate = document.getElementById('task-date');
+    // ----- 辅助函数 -----
+    function saveProjects() {
+        localStorage.setItem('influencer_projects', JSON.stringify(projects));
+    }
 
-        // ----- 辅助函数 -----
-        function saveProjects() {
-            localStorage.setItem('influencer_projects', JSON.stringify(projects));
+    function saveTasks() {
+        localStorage.setItem('influencer_tasks_v3', JSON.stringify(tasks));
+    }
+
+    // ----- 填充项目下拉（关键修复）-----
+    function populateProjects() {
+        const select = document.getElementById('task-project');
+        if (!select) {
+            console.error('找不到 task-project 元素');
+            return;
         }
-
-        function saveTasks() {
-            localStorage.setItem('influencer_tasks_v3', JSON.stringify(tasks));
-        }
-
-        // 填充项目下拉 - 关键修复：清空并重新添加所有选项
-        function populateProjects() {
-            if (!projectSelect) return;
-            // 清空所有现有选项
-            projectSelect.innerHTML = '';
-            // 添加默认占位选项（可选）
-            // 遍历项目数组添加选项
-            projects.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p;
-                opt.textContent = p;
-                projectSelect.appendChild(opt);
-            });
-            // 如果项目列表不为空，默认选中第一个
-            if (projects.length > 0) {
-                projectSelect.value = projects[0];
-            }
-        }
-
-        // ----- 渲染日历 -----
-        function renderCalendar() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            monthDisplay.textContent = `${year}年 ${month + 1}月`;
-
-            const firstDay = new Date(year, month, 1).getDay();
-            const totalDays = new Date(year, month + 1, 0).getDate();
-            const today = new Date();
-            calendarBody.innerHTML = '';
-
-            let dateCounter = 1;
-            for (let row = 0; row < 6; row++) {
-                const tr = document.createElement('tr');
-                let hasCell = false;
-
-                for (let col = 0; col < 7; col++) {
-                    const td = document.createElement('td');
-
-                    if (row === 0 && col < firstDay) {
-                        td.innerHTML = '';
-                    } else if (dateCounter > totalDays) {
-                        td.innerHTML = '';
-                    } else {
-                        hasCell = true;
-                        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dateCounter).padStart(2,'0')}`;
-
-                        const daySpan = document.createElement('span');
-                        daySpan.className = 'day-number';
-                        daySpan.textContent = dateCounter;
-                        td.appendChild(daySpan);
-
-                        if (year === today.getFullYear() && month === today.getMonth() && dateCounter === today.getDate()) {
-                            td.classList.add('current-day');
-                        }
-
-                        const ul = document.createElement('ul');
-                        ul.className = 'event-list';
-
-                        const dayTasks = tasks.filter(t => t.date === dateStr);
-                        if (dayTasks.length === 0) {
-                            const emptyHint = document.createElement('div');
-                            emptyHint.className = 'empty-hint';
-                            emptyHint.textContent = '—';
-                            ul.appendChild(emptyHint);
-                        } else {
-                            dayTasks.forEach(task => {
-                                const li = document.createElement('li');
-                                li.className = `event-item priority-${task.priority}`;
-
-                                const content = document.createElement('div');
-                                content.className = 'event-content';
-                                const displayText = `[${task.project}] ${task.title} · ${task.ddlType}`;
-
-                                if (task.link) {
-                                    const a = document.createElement('a');
-                                    a.href = task.link;
-                                    a.target = '_blank';
-                                    a.textContent = displayText;
-                                    a.title = `项目: ${task.project} | 紧急: ${task.priority}`;
-                                    content.appendChild(a);
-                                } else {
-                                    const span = document.createElement('span');
-                                    span.textContent = displayText;
-                                    span.title = `项目: ${task.project} | 紧急: ${task.priority}`;
-                                    content.appendChild(span);
-                                }
-
-                                const delBtn = document.createElement('button');
-                                delBtn.className = 'delete-btn';
-                                delBtn.innerHTML = '✕';
-                                delBtn.onclick = (e) => {
-                                    e.stopPropagation();
-                                    deleteTask(task.id);
-                                };
-
-                                li.appendChild(content);
-                                li.appendChild(delBtn);
-                                ul.appendChild(li);
-                            });
-                        }
-
-                        td.appendChild(ul);
-                        dateCounter++;
-                    }
-                    tr.appendChild(td);
-                }
-                if (hasCell) calendarBody.appendChild(tr);
-            }
-        }
-
-        // ----- 增删改 -----
-        function addNewProjectPrompt() {
-            const name = prompt('请输入新项目名称 (例如: Clipto)');
-            if (name && name.trim() !== '') {
-                const trimmed = name.trim();
-                if (!projects.includes(trimmed)) {
-                    projects.push(trimmed);
-                    saveProjects();
-                    populateProjects(); // 刷新下拉列表
-                    // 自动选中新添加的项目
-                    projectSelect.value = trimmed;
-                } else {
-                    alert('⚠️ 该项目已存在');
-                }
-            }
-        }
-
-        function openModal() {
-            // 先刷新项目列表
-            populateProjects();
-            // 默认日期今天
-            taskDate.value = new Date().toISOString().split('T')[0];
-            taskTitle.value = '';
-            taskLink.value = '';
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            modal.style.display = 'none';
-        }
-
-        function saveTask() {
-            const project = projectSelect.value;
-            const title = taskTitle.value.trim();
-            const link = taskLink.value.trim();
-            const ddlType = taskDdlType.value;
-            const priority = taskPriority.value;
-            const date = taskDate.value;
-
-            if (!project || !title || !date) {
-                alert('请完整填写：项目、红人名称、日期');
-                return;
-            }
-
-            const newTask = {
-                id: Date.now(),
-                project,
-                title,
-                link: link || '',
-                ddlType,
-                priority,
-                date
-            };
-
-            tasks.push(newTask);
-            saveTasks();
-            closeModal();
-            renderCalendar();
-        }
-
-        function deleteTask(id) {
-            if (confirm('确定要删除这条排期吗？')) {
-                tasks = tasks.filter(t => t.id !== id);
-                saveTasks();
-                renderCalendar();
-            }
-        }
-
-        // ----- 导航 -----
-        function prevMonth() {
-            currentDate.setMonth(currentDate.getMonth() - 1);
-            renderCalendar();
-        }
-        function nextMonth() {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            renderCalendar();
-        }
-        function goToCurrentMonth() {
-            currentDate = new Date();
-            renderCalendar();
-        }
-
-        // ----- 暴露全局（用于 onclick） -----
-        window.openModal = openModal;
-        window.closeModal = closeModal;
-        window.saveTask = saveTask;
-        window.addNewProjectPrompt = addNewProjectPrompt;
-        window.deleteTask = deleteTask;
-        window.prevMonth = prevMonth;
-        window.nextMonth = nextMonth;
-        window.goToCurrentMonth = goToCurrentMonth;
-
-        // 初始化
-        renderCalendar();
-        // 确保项目下拉在页面加载时填充
-        populateProjects();
-
-        // 点击 modal 背景关闭
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
+        // 清空
+        select.innerHTML = '';
+        // 添加选项
+        projects.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            select.appendChild(opt);
         });
-    })();
+        // 如果项目列表不为空，默认选中第一个
+        if (projects.length > 0) {
+            select.value = projects[0];
+        }
+        console.log('项目下拉已刷新，当前项目列表:', projects);
+    }
+
+    // ----- 渲染日历 -----
+    function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const monthDisplay = document.getElementById('month-year-display');
+        monthDisplay.textContent = `${year}年 ${month + 1}月`;
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+        const calendarBody = document.getElementById('calendar-body');
+        calendarBody.innerHTML = '';
+
+        let dateCounter = 1;
+        for (let row = 0; row < 6; row++) {
+            const tr = document.createElement('tr');
+            let hasCell = false;
+
+            for (let col = 0; col < 7; col++) {
+                const td = document.createElement('td');
+
+                if (row === 0 && col < firstDay) {
+                    td.innerHTML = '';
+                } else if (dateCounter > totalDays) {
+                    td.innerHTML = '';
+                } else {
+                    hasCell = true;
+                    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(dateCounter).padStart(2,'0')}`;
+
+                    const daySpan = document.createElement('span');
+                    daySpan.className = 'day-number';
+                    daySpan.textContent = dateCounter;
+                    td.appendChild(daySpan);
+
+                    if (year === today.getFullYear() && month === today.getMonth() && dateCounter === today.getDate()) {
+                        td.classList.add('current-day');
+                    }
+
+                    const ul = document.createElement('ul');
+                    ul.className = 'event-list';
+
+                    const dayTasks = tasks.filter(t => t.date === dateStr);
+                    if (dayTasks.length === 0) {
+                        const emptyHint = document.createElement('div');
+                        emptyHint.className = 'empty-hint';
+                        emptyHint.textContent = '—';
+                        ul.appendChild(emptyHint);
+                    } else {
+                        dayTasks.forEach(task => {
+                            const li = document.createElement('li');
+                            li.className = `event-item priority-${task.priority}`;
+
+                            const content = document.createElement('div');
+                            content.className = 'event-content';
+                            const displayText = `[${task.project}] ${task.title} · ${task.ddlType}`;
+
+                            if (task.link) {
+                                const a = document.createElement('a');
+                                a.href = task.link;
+                                a.target = '_blank';
+                                a.textContent = displayText;
+                                a.title = `项目: ${task.project} | 紧急: ${task.priority}`;
+                                content.appendChild(a);
+                            } else {
+                                const span = document.createElement('span');
+                                span.textContent = displayText;
+                                span.title = `项目: ${task.project} | 紧急: ${task.priority}`;
+                                content.appendChild(span);
+                            }
+
+                            const delBtn = document.createElement('button');
+                            delBtn.className = 'delete-btn';
+                            delBtn.innerHTML = '✕';
+                            delBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                deleteTask(task.id);
+                            };
+
+                            li.appendChild(content);
+                            li.appendChild(delBtn);
+                            ul.appendChild(li);
+                        });
+                    }
+
+                    td.appendChild(ul);
+                    dateCounter++;
+                }
+                tr.appendChild(td);
+            }
+            if (hasCell) calendarBody.appendChild(tr);
+        }
+    }
+
+    // ----- 增删改 -----
+    function addNewProjectPrompt() {
+        const name = prompt('请输入新项目名称 (例如: Clipto)');
+        if (name && name.trim() !== '') {
+            const trimmed = name.trim();
+            if (!projects.includes(trimmed)) {
+                projects.push(trimmed);
+                saveProjects();
+                populateProjects(); // 刷新下拉列表
+                const select = document.getElementById('task-project');
+                if (select) select.value = trimmed;
+                alert('✅ 项目 "' + trimmed + '" 已添加！');
+            } else {
+                alert('⚠️ 该项目已存在');
+            }
+        }
+    }
+
+    function openModal() {
+        // 先刷新项目列表
+        populateProjects();
+        // 默认日期今天
+        const dateInput = document.getElementById('task-date');
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+        document.getElementById('task-title').value = '';
+        document.getElementById('task-link').value = '';
+        document.getElementById('task-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('task-modal').style.display = 'none';
+    }
+
+    function saveTask() {
+        const projectSelect = document.getElementById('task-project');
+        const project = projectSelect ? projectSelect.value : '';
+        const title = document.getElementById('task-title').value.trim();
+        const link = document.getElementById('task-link').value.trim();
+        const ddlType = document.getElementById('task-ddl-type').value;
+        const priority = document.getElementById('task-priority').value;
+        const date = document.getElementById('task-date').value;
+
+        if (!project || !title || !date) {
+            alert('请完整填写：项目、红人名称、日期');
+            return;
+        }
+
+        const newTask = {
+            id: Date.now(),
+            project,
+            title,
+            link: link || '',
+            ddlType,
+            priority,
+            date
+        };
+
+        tasks.push(newTask);
+        saveTasks();
+        closeModal();
+        renderCalendar();
+        alert('✅ 排期已保存！');
+    }
+
+    function deleteTask(id) {
+        if (confirm('确定要删除这条排期吗？')) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            renderCalendar();
+        }
+    }
+
+    // ----- 导航 -----
+    function prevMonth() {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    }
+    function nextMonth() {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    }
+    function goToCurrentMonth() {
+        currentDate = new Date();
+        renderCalendar();
+    }
+
+    // ----- 暴露全局（用于 onclick） -----
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.saveTask = saveTask;
+    window.addNewProjectPrompt = addNewProjectPrompt;
+    window.deleteTask = deleteTask;
+    window.prevMonth = prevMonth;
+    window.nextMonth = nextMonth;
+    window.goToCurrentMonth = goToCurrentMonth;
+
+    // ----- 页面加载完成后初始化 -----
+    window.addEventListener('DOMContentLoaded', function() {
+        console.log('页面加载完成，开始初始化...');
+        renderCalendar();
+        populateProjects();
+        console.log('初始化完成，当前项目:', projects);
+    });
+
+    // 点击 modal 背景关闭
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('task-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+        }
+    });
 </script>
 </body>
 </html>
